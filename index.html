@@ -100,6 +100,8 @@
     /* Hoa mẫu đơn mới, giữ đúng tỷ lệ ảnh và lớp chữ phía trên. */
     .cover-flower{left:50px;top:150px;width:590px;height:885px;transform:scaleX(-1);overflow:visible}
     .cover-flower img{left:0;top:0;width:100%;height:100%;object-fit:contain}
+  
+    .cover-flower{transform:translate(var(--flower-x,0px),var(--flower-y,0px)) rotate(var(--flower-rotation,0deg)) scale(var(--flower-scale,1)) scaleX(-1);transform-origin:center}
   </style>
 </head>
 <body>
@@ -242,12 +244,12 @@
       else {tick(); if (!revealed) interval = setInterval(tick, 250);}
       document.addEventListener('visibilitychange', () => {if(!document.hidden && !revealed) tick();});
 
-      const defaults = {title:{x:0,y:0,size:190},date:{x:0,y:0,size:150}};
-      const sanitize = raw => Object.fromEntries(Object.keys(defaults).map(key => [key,{
-        x:Math.max(-600,Math.min(600,Number(raw?.[key]?.x)||0)),
-        y:Math.max(-797,Math.min(797,Number(raw?.[key]?.y)||0)),
-        size:Math.max(60,Math.min(280,Number(raw?.[key]?.size)||defaults[key].size))
-      }]));
+      const defaults = {title:{x:35,y:-55,size:190},date:{x:-18,y:64,size:150},flower:{x:0,y:0,scale:100,rotation:0}};
+      const definitions={x:['Ngang',-600,600],y:['Dọc',-797,797],size:['Cỡ chữ',60,280],scale:['Kích thước (%)',10,250],rotation:['Góc xoay (°)',-180,180]};
+      const sanitize=raw=>Object.fromEntries(Object.entries(defaults).map(([key,values])=>[key,Object.fromEntries(Object.entries(values).map(([prop,fallback])=>{
+        const value=Number(raw?.[key]?.[prop]),[,min,max]=definitions[prop];
+        return [prop,raw?.[key]?.[prop]!=null&&Number.isFinite(value)?Math.max(min,Math.min(max,value)):fallback];
+      }))]));
       let layout = structuredClone(defaults);
       try {layout = sanitize(JSON.parse(document.getElementById('cover-layout').textContent));} catch {}
       if (editing) {
@@ -255,7 +257,7 @@
       }
       function applyLayout() {
         for (const [key,values] of Object.entries(layout)) {
-          for (const [property,value] of Object.entries(values)) openButton.style.setProperty(`--${key}-${property}`, `${value}px`);
+          for (const [property,value] of Object.entries(values)) openButton.style.setProperty(`--${key}-${property}`, property==='scale'?String(value/100):`${value}${property==='rotation'?'deg':'px'}`);
         }
         if(editing)try{localStorage.setItem('mom-cover-layout-v1',JSON.stringify(layout));}catch{}
       }
@@ -265,13 +267,14 @@
         document.querySelector('.hint').textContent='Kéo chữ trên thiệp hoặc chỉnh trong bảng điều khiển';
         const panel=document.createElement('aside');
         panel.className='layout-controls';panel.setAttribute('aria-label','Điều chỉnh bìa thiệp');
-        panel.innerHTML='<details open><summary>Chỉnh bìa thiệp</summary><p>Kéo trực tiếp từng dòng chữ. Ngang: trái / phải. Dọc: lên / xuống.</p><div class="layout-fields"></div><div class="layout-actions"><button type="button" class="reset-layout">Đặt lại</button><button type="button" class="export-layout">Tải HTML đã chỉnh</button></div><output aria-live="polite">Tự lưu trên trình duyệt này.</output></details>';
+        panel.innerHTML='<details open><summary>Chỉnh bìa thiệp</summary><p>Chỉnh chữ và hoa mẫu đơn. Hoa: kích thước theo %, góc xoay theo độ; có thể chỉnh ngang/dọc.</p><div class="layout-fields"></div><div class="layout-actions"><button type="button" class="reset-layout">Đặt lại</button><button type="button" class="export-layout">Tải HTML đã chỉnh</button></div><output aria-live="polite">Tự lưu trên trình duyệt này.</output></details>';
         document.body.append(panel);
         const fields=panel.querySelector('.layout-fields');
-        for(const [key,name] of [['title','gửi Mẹ'],['date','20-10']]){
+        for(const [key,name] of [['title','gửi Mẹ'],['date','20-10'],['flower','Hoa mẫu đơn']]){
           const fieldset=document.createElement('fieldset');
           const legend=document.createElement('legend');legend.textContent=name;fieldset.append(legend);
-          for(const [prop,label,min,max] of [['x','Ngang',-600,600],['y','Dọc',-797,797],['size','Cỡ chữ',60,280]]){
+          for(const prop of Object.keys(defaults[key])){
+            const [label,min,max]=definitions[prop];
             const row=document.createElement('label');
             const caption=document.createElement('span');caption.textContent=label;
             row.append(caption);
@@ -317,7 +320,7 @@
           const blob=new Blob(['<!doctype html>\n'+clone.outerHTML],{type:'text/html;charset=utf-8'});
           const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='gui-me-20-10-da-chinh.html';link.click();
           setTimeout(()=>URL.revokeObjectURL(url),10000);
-          panel.querySelector('output').textContent='Đã tải bản HTML có vị trí chữ bạn vừa chỉnh.';
+          panel.querySelector('output').textContent='Đã tải HTML có bố cục chữ, kích thước và góc xoay hoa.';
         });
       }
     })();

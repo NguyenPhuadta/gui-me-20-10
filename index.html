@@ -153,7 +153,7 @@
     </section>
     <p class="sr-only" id="announcement" role="status" aria-live="polite"></p>
   </main>
-  <script type="application/json" id="cover-layout">{"title":{"x":35,"y":-55,"size":190},"date":{"x":-18,"y":64,"size":150}}</script>
+  <script type="application/json" id="cover-layout">{"title":{"x":35,"y":-55,"size":208},"date":{"x":-18,"y":64,"size":150},"flower":{"x":52,"y":-57,"scale":89,"rotation":-3}}</script>
   <script>
     (() => {
       'use strict';
@@ -244,7 +244,7 @@
       else {tick(); if (!revealed) interval = setInterval(tick, 250);}
       document.addEventListener('visibilitychange', () => {if(!document.hidden && !revealed) tick();});
 
-      const defaults = {title:{x:35,y:-55,size:190},date:{x:-18,y:64,size:150},flower:{x:0,y:0,scale:100,rotation:0}};
+      const defaults = {"title":{"x":35,"y":-55,"size":208},"date":{"x":-18,"y":64,"size":150},"flower":{"x":52,"y":-57,"scale":89,"rotation":-3}};
       const definitions={x:['Ngang',-600,600],y:['Dọc',-797,797],size:['Cỡ chữ',60,280],scale:['Kích thước (%)',10,250],rotation:['Góc xoay (°)',-180,180]};
       const sanitize=raw=>Object.fromEntries(Object.entries(defaults).map(([key,values])=>[key,Object.fromEntries(Object.entries(values).map(([prop,fallback])=>{
         const value=Number(raw?.[key]?.[prop]),[,min,max]=definitions[prop];
@@ -253,13 +253,13 @@
       let layout = structuredClone(defaults);
       try {layout = sanitize(JSON.parse(document.getElementById('cover-layout').textContent));} catch {}
       if (editing) {
-        try {const saved=localStorage.getItem('mom-cover-layout-v1');if(saved)layout=sanitize(JSON.parse(saved));}catch{}
+        try {const saved=localStorage.getItem('mom-cover-layout-v2');if(saved)layout=sanitize(JSON.parse(saved));}catch{}
       }
       function applyLayout() {
         for (const [key,values] of Object.entries(layout)) {
           for (const [property,value] of Object.entries(values)) openButton.style.setProperty(`--${key}-${property}`, property==='scale'?String(value/100):`${value}${property==='rotation'?'deg':'px'}`);
         }
-        if(editing)try{localStorage.setItem('mom-cover-layout-v1',JSON.stringify(layout));}catch{}
+        if(editing)try{localStorage.setItem('mom-cover-layout-v2',JSON.stringify(layout));}catch{}
       }
       applyLayout();
       if (editing) {
